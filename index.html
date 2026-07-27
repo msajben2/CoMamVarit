@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
+    <!-- PRIHLASOVACIA OBRAZOVKA -->
     <div id="login-screen" class="login-overlay">
         <div class="login-box">
             <h2>Vstup do kuchyne</h2>
@@ -16,9 +17,11 @@
         </div>
     </div>
 
+    <!-- HLAVNÝ OBSAH APLIKÁCIE -->
     <div id="app-content" class="container" style="display: none;">
         <h1>Čo mám variť?</h1>
         
+        <!-- HLAVNÉ KOLESO (HLAVNÉ JEDLÁ) -->
         <div class="wheel-section main-section">
             <h2>Hlavné jedlo</h2>
             <div class="wheel-outer main-outer">
@@ -30,7 +33,9 @@
             <button id="reset-main-btn" class="reset-btn">Reset histórie jedál</button>
         </div>
 
+        <!-- VEDĽAJŠIE KOLESÁ (POLIEVKY A DEZERTY) -->
         <div class="sub-wheels-container">
+            <!-- KOLESO POLIEVKY -->
             <div class="wheel-section sub-section">
                 <h3>Polievky</h3>
                 <div class="wheel-outer sub-outer">
@@ -42,6 +47,7 @@
                 <button id="reset-soup-btn" class="reset-btn sub-reset-btn">Reset polievok</button>
             </div>
 
+            <!-- KOLESO DEZERTY -->
             <div class="wheel-section sub-section">
                 <h3>Dezerty</h3>
                 <div class="wheel-outer sub-outer">
@@ -54,11 +60,12 @@
             </div>
         </div>
         
+        <!-- ZOZNAM VŠETKÝCH BLOKOVANÝCH RECEPTOV -->
         <div class="history-container">
             <h3>Zablokované recepty (ešte v zozname):</h3>
             <ul id="blocked-list"></ul>
         </div>
     </div>
-    <script src="script.js"></script>
+    <script src="script.js?v=3"></script>
 </body>
 </html>
