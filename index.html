@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CoMamVarit</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="login-screen" class="login-overlay">
+        <div class="login-box">
+            <h2>Vstup do kuchyne</h2>
+            <input type="password" id="password-input" placeholder="Zadaj heslo">
+            <button id="login-btn">Prihlásiť sa</button>
+            <div id="login-error" class="error-msg"></div>
+        </div>
+    </div>
+
+    <div id="app-content" class="container" style="display: none;">
+        <h1>Čo mám variť?</h1>
+        
+        <div class="wheel-section main-section">
+            <h2>Hlavné jedlo</h2>
+            <div class="wheel-outer main-outer">
+                <div class="pointer">▼</div>
+                <canvas id="wheelCanvas" width="360" height="360"></canvas>
+            </div>
+            <button id="spin-btn">Roztočiť Hlavné jedlo</button>
+            <div id="result-display" class="result">Roztoč koleso</div>
+            <button id="reset-main-btn" class="reset-btn">Reset histórie jedál</button>
+        </div>
+
+        <div class="sub-wheels-container">
+            <div class="wheel-section sub-section">
+                <h3>Polievky</h3>
+                <div class="wheel-outer sub-outer">
+                    <div class="pointer sub-pointer">▼</div>
+                    <canvas id="soupCanvas" width="180" height="180"></canvas>
+                </div>
+                <button id="spin-soup-btn">Roztočiť</button>
+                <div id="soup-result" class="result sub-result">Čaká sa...</div>
+                <button id="reset-soup-btn" class="reset-btn sub-reset-btn">Reset polievok</button>
+            </div>
+
+            <div class="wheel-section sub-section">
+                <h3>Dezerty</h3>
+                <div class="wheel-outer sub-outer">
+                    <div class="pointer sub-pointer">▼</div>
+                    <canvas id="dessertCanvas" width="180" height="180"></canvas>
+                </div>
+                <button id="spin-dessert-btn">Roztočiť</button>
+                <div id="dessert-result" class="result sub-result">Čaká sa...</div>
+                <button id="reset-dessert-btn" class="reset-btn sub-reset-btn">Reset dezertov</button>
+            </div>
+        </div>
+        
+        <div class="history-container">
+            <h3>Zablokované recepty (ešte v zozname):</h3>
+            <ul id="blocked-list"></ul>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
