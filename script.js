@@ -11,7 +11,7 @@ const fZlata = "#e5c158", fCervena = "#c92a2a", fBiela = "#f8f9fa", fPrechod = "
 const BLOKOVANIE_MS = 21 * 24 * 60 * 60 * 1000;
 let dostupneRecepty = [], dostupnePolievky = [], dostupneDezerty = [], angles = { main: 0, soup: 0, dessert: 0 };
 
-// BEZPEČNÝ ODTLAČOK HESLA "tester123!"
+// Bezpečný odtlačok pre heslo "tester123!"
 const SPRAVNE_HESLO_HASH = "7c2a71556942c7aa7c191a3c79a4055b85434d31481e1a5f6e80b6dc36b41297";
 
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -25,11 +25,46 @@ function playClickSound() {
     osc1.start(); osc2.start(); osc1.stop(audioCtx.currentTime + 0.03); osc2.stop(audioCtx.currentTime + 0.03);
 }
 
-// Kryptografická funkcia pre HTTPS prepojenie
-async function sha256(text) {
-    const msgBuffer = new TextEncoder().encode(text);
-    const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
-    return Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
+// Čistý matematický algoritmus SHA-256 nezávislý od prehliadača
+function sha256(ascii) {
+    function rightRotate(value, amount) { return (value>>>amount) | (value<<(32 - amount)); }
+    var mathPow = Math.pow; var maxWord = mathPow(2, 32); var lengthProperty = 'length'; var i, j; var result = ''; var words = []; var asciiLength = ascii[lengthProperty];
+    var hash = [], k = []; var primeCounter = 0; var isPrime = {};
+    for (var hashIndex = 2; primeCounter < 64; hashIndex++) {
+        if (!isPrime[hashIndex]) {
+            for (i = 0; i < 300; i += hashIndex) { isPrime[i] = true; }
+            if (primeCounter < 8) { hash[primeCounter] = (mathPow(hashIndex, .5) * maxWord) | 0; }
+            k[primeCounter] = (mathPow(hashIndex, 1/3) * maxWord) | 0; primeCounter++;
+        }
+    }
+    ascii += '\x80';
+    while (ascii[lengthProperty] % 64 - 56) { ascii += '\x00'; }
+    for (i = 0; i < ascii[lengthProperty]; i++) {
+        j = ascii.charCodeAt(i); if (j >> 8) return; words[i >> 2] |= j << ((3 - i % 4) * 8);
+    }
+    words[words[lengthProperty]] = ((asciiLength * 8) / maxWord) | 0; words[words[lengthProperty]] = (asciiLength * 8);
+    for (j = 0; j < words[lengthProperty]; j += 16) {
+        var w = words.slice(j, j + 16); var oldHash = hash.slice(0);
+        for (i = 0; i < 64; i++) {
+            if (i >= 16) {
+                var w15 = w[i - 15], w2 = w[i - 2];
+                var s0 = rightRotate(w15, 7) ^ rightRotate(w15, 18) ^ (w15 >>> 3);
+                var s1 = rightRotate(w2, 17) ^ rightRotate(w2, 19) ^ (w2 >>> 10);
+                w[i] = (w[i - 16] + s0 + w[i - 7] + s1) | 0;
+            }
+            var ch = (hash[4] & hash[5]) ^ (~hash[4] & hash[6]);
+            var maj = (hash[0] & hash[1]) ^ (hash[0] & hash[2]) ^ (hash[1] & hash[2]);
+            var s0_h = rightRotate(hash[0], 2) ^ rightRotate(hash[0], 13) ^ rightRotate(hash[0], 22);
+            var s1_h = rightRotate(hash[4], 6) ^ rightRotate(hash[4], 11) ^ rightRotate(hash[4], 25);
+            var t1 = (hash[7] + s1_h + ch + k[i] + (w[i] || 0)) | 0; var t2 = (s0_h + maj) | 0;
+            hash = [(t1 + t2) | 0].concat(hash); hash[4] = (hash[4] + t1) | 0; hash.length = 8;
+        }
+        for (i = 0; i < 8; i++) { hash[i] = (hash[i] + oldHash[i]) | 0; }
+    }
+    for (i = 0; i < 8; i++) {
+        for (j = 3; j + 1; j--) { var b = (hash[i] >> (j * 8)) & 255; result += (b < 16 ? '0' : '') + b.toString(16); }
+    }
+    return result;
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -47,12 +82,12 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('spin-dessert-btn')?.addEventListener('click', () => spin('dessertCanvas', 'spin-dessert-btn', 'dessert-result', dostupneDezerty, 'dessert', (v) => { ulozDoHistorie('uvareneDezerty', v); setTimeout(aktualizujVsetkyKolesa, 1200); }));
 });
 
-async function overHeslo() {
+function overHeslo() {
     const inputEl = document.getElementById('password-input'), errorEl = document.getElementById('login-error');
     if (!inputEl) return;
     
-    // Asynchrónne zašifrovanie vstupu a porovnanie s odtlačkom
-    if ((await sha256(inputEl.value)) === SPRAVNE_HESLO_HASH) {
+    // Porovnanie cez natívny algoritmus fungujúci všade
+    if (sha256(inputEl.value) === SPRAVNE_HESLO_HASH) {
         sessionStorage.setItem('kuchynaOverena', 'true');
         pustitDoAplikacie();
     } else {
@@ -108,28 +143,3 @@ function draw(cId, zDost, zVset, isMain) {
     ctx.clearRect(0, 0, canvas.width, canvas.height); if (segs === 0) return;
     for (let i = 0; i < segs; i++) {
         const a = i * arc; ctx.fillStyle = (i === segs - 1 && segs % 2 === 0) ? fPrechod : ((i % 2 === 0) ? fCervena : fBiela);
-        ctx.beginPath(); ctx.moveTo(c, c); ctx.arc(c, c, r, a, a + arc); ctx.lineTo(c, c); ctx.fill();
-        if (segs > 1) { ctx.strokeStyle = fZlata; ctx.lineWidth = isMain ? 2 : 1; ctx.beginPath(); ctx.moveTo(c, c); ctx.lineTo(c + r * Math.cos(a), c + r * Math.sin(a)); ctx.stroke(); }
-        ctx.save(); ctx.translate(c, c); ctx.rotate(a + arc / 2); ctx.textAlign = "right"; ctx.fillStyle = (ctx.fillStyle === fBiela) ? "#121214" : "#ffffff";
-        ctx.font = `bold ${isMain ? 13 : 11}px sans-serif`; ctx.fillText((zVset.indexOf(zDost[i]) + 1).toString(), r - (isMain ? 20 : 10), 4); ctx.restore();
-    }
-    ctx.strokeStyle = fZlata; ctx.lineWidth = isMain ? 6 : 4; ctx.beginPath(); ctx.arc(c, c, r, 0, 2 * Math.PI); ctx.stroke();
-    ctx.beginPath(); ctx.arc(c, c, isMain ? 16 : 8, 0, 2 * Math.PI); ctx.fillStyle = fZlata; ctx.fill();
-}
-
-function spin(cId, bId, rId, zoznam, key, onComp) {
-    const canvas = document.getElementById(cId), btn = document.getElementById(bId), res = document.getElementById(rId);
-    if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
-    btn.disabled = true; res.textContent = "Točím...";
-    const dur = 4000, start = angles[key], add = (Math.random() * 4 * Math.PI) + 8 * Math.PI, target = start + add, sTime = performance.now(), arc = (2 * Math.PI) / zoznam.length;
-    let lastSeg = -1;
-    function anim(cTime) {
-        const el = cTime - sTime;
-        if (el < dur) {
-            angles[key] = start + (add * (1 - Math.pow(1 - (el / dur), 4))); canvas.style.transform = `rotate(${angles[key] * (180 / Math.PI)}deg)`;
-            if (Math.floor(angles[key] / arc) !== lastSeg) { playClickSound(); lastSeg = Math.floor(angles[key] / arc); }
-            requestAnimationFrame(anim);
-        } else {
-            angles[key] = target; canvas.style.transform = `rotate(${target * (180 / Math.PI)}deg)`; btn.disabled = false;
-            const item = zoznam[Math.floor(((2 * Math.PI - (target % (2 * Math.PI))) % (2 * Math.PI) + (3 * Math.PI / 2)) % (2 * Math.PI) / arc) % zoznam.length];
-            res.textContent = `Dnes sa ${mnozneCisloJedla.includes(item) ? "budú" : "bude"} pripravovať: ${item} dobrú chuť!`;
